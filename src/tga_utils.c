@@ -95,34 +95,26 @@ void write_tga_pal(FILE *stream){
 }
 
 
-/* returns the shrunk size */
+// shrink_tga(): compresses both palette (by deleting unused entries) and data(RLE encoding)
 int shrink_tga(BYTE imgDest[], BYTE imgBuf[], DWORD size){
     BYTE used_indexes[256] = {0};
     unsigned int i = 0, j = 0;
 
-    union counter_u{
-        struct RLE_counter_s{
-            BYTE counter : 7;
-            BYTE highBit : 1;
-        }RLE_counter;
-
-        BYTE RLE_byte;
-    }counter;
+    BYTE RLE_byte;
 
     tga_header.CMapLength = shrink_palette(imgBuf, size, used_indexes);
 
-    counter.RLE_counter.highBit = 1;
     do{
-        counter.RLE_counter.counter = 0;
+        RLE_byte = 0;
         while(i + 1 < size && imgBuf[i+1] == imgBuf[i]){
-            ++counter.RLE_counter.counter;
+            ++RLE_byte;
             ++i;
 
-            if(counter.RLE_counter.counter == 127)
+            if(RLE_byte == 127)
                 break;
         }
 
-        imgDest[j++] =  counter.RLE_byte;
+        imgDest[j++] =  RLE_byte | 0x80;
         imgDest[j++] =  used_indexes[imgBuf[i++]];
     }while(i < size);
 
