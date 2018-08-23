@@ -36,7 +36,7 @@ int main(int argc, char **argv){
     struct qvr_palette_s qvr_palette[256];
 
 
-    puts("\t\tQuiver resource ripper v1.1 by Yagotzirck\n");
+    puts("\t\tQuiver resource ripper by Yagotzirck\n");
 
 
 
