@@ -1,7 +1,7 @@
 # quiver_ripper
 An archive extractor tool for the DOS game Quiver (1997).
 
-Pardon they cringey code, but I made this a while ago; though given that it serves its purpose just fine and the fact that it's
+Pardon the cringey code, but I made this a while ago; though given that it serves its purpose just fine and the fact that it's
 more or less comprehensible as it is, I think that no refactoring is necessary.
 
 ## Usage
