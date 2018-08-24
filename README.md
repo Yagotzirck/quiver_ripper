@@ -1,14 +1,13 @@
 # quiver_ripper
 An archive extractor tool for the DOS game Quiver (1997).
 
-Pardon the cringey code, but I made this a while ago; though given that it serves its purpose just fine and the fact that it's
-more or less comprehensible as it is, I think that no refactoring is necessary.
+Apologies for the less than optimal code: this tool was done a while ago and was among my first ripper programs. Nonetheless, considering it serves its purpose just fine and is more or less comprehensible as it is, I don't think a rewrite is necessary.
 
 ## Usage
 	quiver_ripper G.bin
 where G.bin is the game's archive name passed as an argument(in Windows you can also use the drag-and-drop method).
 Once the extractor has done its thing, you should have the extracted resources in a subfolder
-located in the same path of the archive (if you didn't use the drag-and-drop method, you should see the subfolder's path
+located in the same path as the archive (if you didn't use the drag-and-drop method, you should see the subfolder's path
 printed as soon as the extraction is done, just in case).
 
 ## Extracted material
