@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "makedirs.h"
 
@@ -8,19 +9,29 @@ extern char path[];
 extern char *name;
 
 void makedirs(const char *archivename){
+    char lowercase_archivename[FILENAME_MAX];
+    int i;
+
     strcpy(path, archivename);
 
     /* position to "G.bin" (excluding path) */
+    name = path + strlen(path);
 
-    name = path + strlen(archivename);
+    do --name;
+    while(*name != '\\' && *name != '/' && name != path);
 
-    while(*--name != '\\')
-        ;
+    if(*name == '\\' || *name == '/')
+        ++name;
 
-    ++name;
+    /* create a lowercase string of the filename passed as an argument, to avoid
+    ** issues with case sensitivity when checking the filename
+    */
+    for(i = 0; name[i] != '\0'; ++i)
+        lowercase_archivename[i] = tolower(name[i]);
+    lowercase_archivename[i] = '\0';
 
-    if(strcmp(name, "G.bin") != 0){
-        fputs("You have to pass Quiver's game archive file G.bin as argument.", stderr);
+    if(strcmp(lowercase_archivename, "g.bin") != 0){
+        fputs("You have to pass Quiver's game archive file G.bin as an argument.", stderr);
         exit(EXIT_FAILURE);
     }
 
