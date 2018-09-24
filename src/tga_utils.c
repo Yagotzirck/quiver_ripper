@@ -100,22 +100,81 @@ int shrink_tga(BYTE imgDest[], BYTE imgBuf[], DWORD size){
     BYTE used_indexes[256] = {0};
     unsigned int i = 0, j = 0;
 
-    BYTE RLE_byte;
+    BYTE pixelCount;    // this is TGA's RLE-packet counter field; the real count is pixelCount + 1
 
     tga_header.CMapLength = shrink_palette(imgBuf, size, used_indexes);
 
     do{
-        RLE_byte = 0;
+        pixelCount = 0;
         while(i + 1 < size && imgBuf[i+1] == imgBuf[i]){
-            ++RLE_byte;
+            ++pixelCount;
             ++i;
 
-            if(RLE_byte == 127)
+            if(pixelCount == 127)
                 break;
         }
 
-        imgDest[j++] =  RLE_byte | 0x80;
-        imgDest[j++] =  used_indexes[imgBuf[i++]];
+        /* we got a gain (or uninflated size if 2 consecutive pixels only:
+        ** pixelCount byte + pixel byte VS. pixel byte repeated 2 times)
+        */
+        if(pixelCount > 0){
+            imgDest[j++] =  pixelCount | 0x80;    // this is a RLE packet, so the MSB must be set
+            imgDest[j++] =  used_indexes[imgBuf[i++]];
+        }
+        else{ // check how many subsequent pixels are uncompressible by RLE
+            unsigned int identicalPixelsCount = 0;
+
+            /* save the index in which we put pixelCount, once we know the pixel count
+            ** for the current non-RLE packet
+            */
+            unsigned int packet_pixelCountIdx = j++;
+
+            // put the 1st uncompressible pixel in the destination buffer
+            imgDest[j++] = used_indexes[imgBuf[i++]];
+
+
+            /* in order to avoid inflating the image data from breaking the
+            ** run of unidentical pixels, we need at least
+            ** 3 consecutive identical pixels;
+            ** breaking at 2 would inflate data by 1 byte due to an extra pixelCount byte.
+            **
+            ** Consider the following string example, where the letters represent pixel bytes
+            ** and numbers represent RLE bytes, e.g. "abcddefghhh" (11 bytes):
+            ** (we put a number before each pixel run / packet, RLE or not,
+            ** since that's how TGA's RLE encoding works)
+            ** - breaking at the double d's gives "3abc2d3efg3h", resulting in 12 bytes;
+            ** - breaking at the triple h's gives "8abcddefg3h" , resulting in 11 bytes.
+            **
+            ** By breaking at the triple h's, we got the same size as the original data,
+            ** thus we avoided inflating it.
+            */
+            while(i + 1 < size && pixelCount < 127){
+
+                if(imgBuf[i+1] == imgBuf[i])
+                    ++identicalPixelsCount;
+                else
+                    identicalPixelsCount = 0;
+
+                /* 3 subsequent identical pixels counted(possibly more after);
+                ** we can break the run of uncompressible pixels without inflating the data
+                */
+                if(identicalPixelsCount == 2){
+                    --i;
+                    --pixelCount;
+                    --j;
+                    break;
+                }
+
+                // put the uncompressible pixel in the destination buffer
+                imgDest[j++] = used_indexes[imgBuf[i++]];
+                ++pixelCount;
+            }
+
+            // put pixelCount in the destination buffer for the current non-RLE packet
+            imgDest[packet_pixelCountIdx] = pixelCount;
+        }
+
+
     }while(i < size);
 
     /* if the RLE compression resulted in increased size keep the data in its raw form
